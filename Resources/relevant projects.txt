@@ -1,0 +1,24 @@
+1)
+
+https://github.com/mgbellemare/Arcade-Learning-Environment
+The Arcade Learning Environment:simple object-oriented framework that allows researchers and hobbyists to develop AI agents for Atari 2600 games.
+
+2)
+
+https://github.com/spragunr/deep_q_rl
+
+This package provides a Lasagne/Theano-based implementation of the deep Q-learning algorithm described in:
+
+Playing Atari with Deep Reinforcement Learning 
+http://arxiv.org/abs/1312.5602
+http://youtu.be/SZ88F82KLX4
+
+3)
+
+https://github.com/harvitronix/reinforcement-learning-car
+
+The medium project we keep referring to.
+
+https://blog.coast.ai/using-reinforcement-learning-in-python-to-teach-a-virtual-car-to-avoid-obstacles-6e782cc7d4c6
+https://medium.com/@harvitronix/reinforcement-learning-in-python-to-teach-a-virtual-car-to-avoid-obstacles-part-2-93e614fcd238#.vbakopk4o
+https://medium.com/@harvitronix/reinforcement-learning-in-python-to-teach-an-rc-car-to-avoid-obstacles-part-3-a1d063ac962f
