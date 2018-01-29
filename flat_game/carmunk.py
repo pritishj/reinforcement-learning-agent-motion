@@ -66,7 +66,7 @@ class GameState:
         self.obstacles = []
         self.obstacles.append(self.create_obstacle(200, 350, 100))
         self.obstacles.append(self.create_obstacle(700, 200, 125))
-        self.obstacles.append(self.create_obstacle(600, 600, 35))
+        self.obstacles.append(self.create_obstacle(600, 600, 100))
 
         # Create a cat.
         #self.create_cat()
@@ -105,9 +105,9 @@ class GameState:
 
     def frame_step(self, action):
         if action == 0:  # Turn left.
-            self.car_body.angle -= .2
+            self.car_body.angle -= .01	
         elif action == 1:  # Turn right.
-            self.car_body.angle += .2
+            self.car_body.angle += .01
 
         # Move obstacles.
         if self.num_steps % 100 == 0:
