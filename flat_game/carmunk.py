@@ -105,10 +105,21 @@ class GameState:
 
     def frame_step(self, action):
         if action == 0:  # Turn left.
-            self.car_body.angle -= .01	
+            self.car_body.angle -= .02
+            self.car_shape.color = THECOLORS["darkorchid"]
         elif action == 1:  # Turn right.
+            self.car_body.angle -= .01
+            self.car_shape.color = THECOLORS["darkslateblue"]
+        elif action == 2:  # Turn right.
+            self.car_body.angle -= .00
+            self.car_shape.color = THECOLORS["darkturquoise"]
+        elif action == 3:  # Turn right.
             self.car_body.angle += .01
-
+            self.car_shape.color = THECOLORS["darkgreen"]
+        elif action == 4:  # Turn right.
+            self.car_body.angle += .02
+            self.car_shape.color = THECOLORS["orange"]
+            
         # Move obstacles.
         if self.num_steps % 100 == 0:
             self.move_obstacles()
@@ -121,7 +132,7 @@ class GameState:
         self.car_body.velocity = 10 * driving_direction
 
         # Update the screen and stuff.
-        screen.fill(THECOLORS["black"])
+        screen.fill(THECOLORS["white"])
         draw(screen, self.space)
         self.space.step(1./10)
         if draw_screen:
@@ -179,8 +190,8 @@ class GameState:
                 screen.fill(THECOLORS["grey7"])  # Red is scary!
                 draw(screen, self.space)
                 self.space.step(1./10)
-                if draw_screen:
-                    pygame.display.flip()
+#                if draw_screen:
+#                    pygame.display.flip()
                 clock.tick()
 
     def sum_readings(self, readings):
@@ -207,18 +218,18 @@ class GameState:
         arm_ll = arm_left
 
         # Rotate them and get readings.
-        readings.append(self.get_arm_distance(arm_left, x, y, angle, 0.75))
-        readings.append(self.get_arm_distance(arm_ll, x, y, angle, 0.5))
-        readings.append(self.get_arm_distance(arm_middle, x, y, angle, 0))
-        readings.append(self.get_arm_distance(arm_right, x, y, angle, -0.75))
-        readings.append(self.get_arm_distance(arm_rr, x, y, angle, -0.5))
+        readings.append(self.get_arm_distance(arm_left, x, y, angle, 0.75, THECOLORS['darkorchid']))
+        readings.append(self.get_arm_distance(arm_ll, x, y, angle, 0.5, THECOLORS['darkslateblue']))
+        readings.append(self.get_arm_distance(arm_middle, x, y, angle, 0, THECOLORS['darkturquoise']))
+        readings.append(self.get_arm_distance(arm_right, x, y, angle, -0.75, THECOLORS['darkgreen']))
+        readings.append(self.get_arm_distance(arm_rr, x, y, angle, -0.5, THECOLORS['orange']))
 
         if show_sensors:
             pygame.display.update()
 
         return readings
 
-    def get_arm_distance(self, arm, x, y, angle, offset):
+    def get_arm_distance(self, arm, x, y, angle, offset, color):
         # Used to count the distance.
         i = 0
 
@@ -242,7 +253,7 @@ class GameState:
                     return i
 
             if show_sensors:
-                pygame.draw.circle(screen, (255, 255, 255), (rotated_p), 2)
+                pygame.draw.circle(screen, color, (rotated_p), 2)
 
         # Return the distance for the arm.
         return i
@@ -269,7 +280,7 @@ class GameState:
         return int(new_x), int(new_y)
 
     def get_track_or_not(self, reading):
-        if reading == THECOLORS['black']:
+        if reading == THECOLORS['white']:
             return 0
         else:
             return 1
@@ -277,4 +288,4 @@ class GameState:
 if __name__ == "__main__":
     game_state = GameState()
     while True:
-        game_state.frame_step((random.randint(0, 2)))
+        game_state.frame_step((random.randint(0, 4)))
