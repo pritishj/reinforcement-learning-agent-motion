@@ -47,7 +47,7 @@ def train_net(model, params):
 
         # Choose an action.
         if random.random() < epsilon or t < observe:
-            action = np.random.randint(0, 3)  # random
+            action = np.random.randint(0, 4)  # random
         else:
             # Get Q values for each action.
             qval = model.predict(state, batch_size=1)
@@ -144,6 +144,7 @@ def process_minibatch2(minibatch, model):
     actions = np.zeros(shape=(mb_len,))
     rewards = np.zeros(shape=(mb_len,))
     new_states = np.zeros(shape=(mb_len, 5))
+
 
     for i, m in enumerate(minibatch):
         old_state_m, action_m, reward_m, new_state_m = m
