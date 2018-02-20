@@ -66,7 +66,7 @@ class GameState:
         self.obstacles = []
         self.obstacles.append(self.create_obstacle(200, 350, 100))
         self.obstacles.append(self.create_obstacle(700, 200, 125))
-        self.obstacles.append(self.create_obstacle(600, 600, 100))
+        self.obstacles.append(self.create_obstacle(600, 600, 35))
 
         # Create a cat.
         #self.create_cat()
@@ -105,19 +105,19 @@ class GameState:
 
     def frame_step(self, action):
         if action == 0:  # Turn left.
-            self.car_body.angle -= .02
+            self.car_body.angle -= .2
             self.car_shape.color = THECOLORS["darkorchid"]
         elif action == 1:  # Turn right.
-            self.car_body.angle -= .01
+            self.car_body.angle -= .1
             self.car_shape.color = THECOLORS["darkslateblue"]
         elif action == 2:  # Turn right.
-            self.car_body.angle -= .00
+            self.car_body.angle -= .0
             self.car_shape.color = THECOLORS["darkturquoise"]
         elif action == 3:  # Turn right.
-            self.car_body.angle += .01
+            self.car_body.angle += .1
             self.car_shape.color = THECOLORS["darkgreen"]
         elif action == 4:  # Turn right.
-            self.car_body.angle += .02
+            self.car_body.angle += .2
             self.car_shape.color = THECOLORS["orange"]
             
         # Move obstacles.
@@ -129,7 +129,7 @@ class GameState:
             self.move_cat()"""
 
         driving_direction = Vec2d(2, 0).rotated(self.car_body.angle)
-        self.car_body.velocity = 10 * driving_direction
+        self.car_body.velocity = 100 * driving_direction
 
         # Update the screen and stuff.
         screen.fill(THECOLORS["white"])
@@ -172,7 +172,7 @@ class GameState:
         self.cat_body.velocity = speed * direction"""
 
     def car_is_crashed(self, readings):
-        if readings[0] == 1 or readings[1] == 1 or readings[2] == 1:
+        if readings[0] == 1 or readings[1] == 1 or readings[2] == 1 or readings[3] == 1 or readings[4] == 1:
             return True
         else:
             return False
@@ -186,7 +186,7 @@ class GameState:
             self.car_body.velocity = -100 * driving_direction
             self.crashed = False
             for i in range(10):
-                self.car_body.angle += .2  # Turn a little.
+                self.car_body.angle += .1  # Turn a little.
                 screen.fill(THECOLORS["grey7"])  # Red is scary!
                 draw(screen, self.space)
                 self.space.step(1./10)
