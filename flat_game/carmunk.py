@@ -10,6 +10,7 @@ from pymunk.vec2d import Vec2d
 from pymunk.pygame_util import draw
 
 # PyGame init
+ncollision=0
 width = 1000
 height = 700
 pygame.init()
@@ -129,7 +130,7 @@ class GameState:
             self.move_cat()"""
 
         driving_direction = Vec2d(2, 0).rotated(self.car_body.angle)
-        self.car_body.velocity = 100 * driving_direction
+        self.car_body.velocity = 10 * driving_direction
 
         # Update the screen and stuff.
         screen.fill(THECOLORS["white"])
@@ -142,7 +143,7 @@ class GameState:
         # Get the current location and the readings there.
         x, y = self.car_body.position
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
-        normalized_readings = [(x-20.0)/20.0 for x in readings] 
+        normalized_readings = [((i+1)%2)*(x-20.0)/20.0+(i%2)*x for i,x in enumerate(readings)] 
         state = np.array([normalized_readings])
 
         # Set the reward.
@@ -150,6 +151,9 @@ class GameState:
         if self.car_is_crashed(readings):
             self.crashed = True
             reward = -500
+            global ncollision
+            ncollision = ncollision + 1
+            print("Total collisions: %d" % ncollision)
             self.recover_from_crash(driving_direction)
         else:
             # Higher readings are better, so return the sum.
@@ -172,7 +176,7 @@ class GameState:
         self.cat_body.velocity = speed * direction"""
 
     def car_is_crashed(self, readings):
-        if readings[0] == 1 or readings[1] == 1 or readings[2] == 1 or readings[3] == 1 or readings[4] == 1:
+        if readings[0] == 1 or readings[2] == 1 or readings[4] == 1 or readings[6] == 1 or readings[8] == 1:
             return True
         else:
             return False
@@ -218,11 +222,11 @@ class GameState:
         arm_ll = arm_left
 
         # Rotate them and get readings.
-        readings.append(self.get_arm_distance(arm_left, x, y, angle, 0.75, THECOLORS['darkorchid']))
-        readings.append(self.get_arm_distance(arm_ll, x, y, angle, 0.5, THECOLORS['darkslateblue']))
-        readings.append(self.get_arm_distance(arm_middle, x, y, angle, 0, THECOLORS['darkturquoise']))
-        readings.append(self.get_arm_distance(arm_right, x, y, angle, -0.75, THECOLORS['darkgreen']))
-        readings.append(self.get_arm_distance(arm_rr, x, y, angle, -0.5, THECOLORS['orange']))
+        readings.extend(self.get_arm_distance(arm_left, x, y, angle, 0.75, THECOLORS['darkorchid']))
+        readings.extend(self.get_arm_distance(arm_ll, x, y, angle, 0.5, THECOLORS['darkslateblue']))
+        readings.extend(self.get_arm_distance(arm_middle, x, y, angle, 0, THECOLORS['darkturquoise']))
+        readings.extend(self.get_arm_distance(arm_right, x, y, angle, -0.75, THECOLORS['darkgreen']))
+        readings.extend(self.get_arm_distance(arm_rr, x, y, angle, -0.5, THECOLORS['orange']))
 
         if show_sensors:
             pygame.display.update()
@@ -246,17 +250,17 @@ class GameState:
             # if we did.
             if rotated_p[0] <= 0 or rotated_p[1] <= 0 \
                     or rotated_p[0] >= width or rotated_p[1] >= height:
-                return i  # Sensor is off the screen.
+                return [i,1]  # Sensor is off the screen.  is obstacle color
             else:
                 obs = screen.get_at(rotated_p)
                 if self.get_track_or_not(obs) != 0:
-                    return i
+                    return [i,1] #1 for obstacle color
 
             if show_sensors:
                 pygame.draw.circle(screen, color, (rotated_p), 2)
 
         # Return the distance for the arm.
-        return i
+        return [i,0]# 0 is track color
 
     def make_sonar_arm(self, x, y):
         spread = 10  # Default spread.

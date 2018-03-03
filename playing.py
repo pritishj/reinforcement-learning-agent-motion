@@ -6,7 +6,7 @@ from flat_game import carmunk
 import numpy as np
 from nn import neural_net
 
-NUM_SENSORS = 5
+NUM_SENSORS = 10
 
 
 def play(model):
