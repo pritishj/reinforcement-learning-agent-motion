@@ -2,3 +2,5 @@
 saved-models*
 *.bk
 results*
+*.*~
+*#*.*#

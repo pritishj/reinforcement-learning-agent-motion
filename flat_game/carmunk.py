@@ -58,7 +58,6 @@ class GameState:
         for s in static:
             s.friction = 1.
             s.group = 1
-            s.collision_type = 1
             s.color = THECOLORS['red']
         self.space.add(static)
 
@@ -69,6 +68,12 @@ class GameState:
         self.obstacles.append(self.create_obstacle(700, 200, 125))
         self.obstacles.append(self.create_obstacle(600, 600, 35))
 
+        #Create coins at random
+        self.coin_pt = []
+        for x in range(1,6):
+            self.coin_pt.append(self.create_coin_pt(random.randint(1,1000), random.randint(1,600), 60))
+
+
 
     def create_car(self, x, y, r):
         inertia = pymunk.moment_for_circle(1, 0, 14, (0, 0))
@@ -77,6 +82,7 @@ class GameState:
         self.car_shape = pymunk.Circle(self.car_body, 25)
         self.car_shape.color = THECOLORS["green"]
         self.car_shape.elasticity = 1.0
+        self.car_shape.collision_type = 2
         self.car_body.angle = r
         driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
         self.car_body.apply_impulse(driving_direction)
@@ -88,10 +94,21 @@ class GameState:
         c_shape = pymunk.Circle(c_body, r)
         c_shape.elasticity = 1.0
         c_body.position = x, y
+        #c_shape.group = 2
         c_shape.color = THECOLORS["blue"]
         self.space.add(c_body, c_shape)
         return c_body
 
+    def create_coin_pt(self, x, y, r):
+        r_body = pymunk.Body(1000, pymunk.inf)
+        r_shape = pymunk.Circle(r_body, r)
+        r_shape.elasticity = 1.0
+        r_body.position = x, y
+        r_shape.collision_type = 1
+        #r_shape.group = 2
+        r_shape.color = THECOLORS["orange"]
+        self.space.add(r_body, r_shape)
+        return r_body
 
     def frame_step(self, action):
         if action == 0:  # Turn left.
@@ -109,10 +126,16 @@ class GameState:
         elif action == 4:  # Turn right.
             self.car_body.angle += .2
             self.car_shape.color = THECOLORS["orange"]
-            
+
+        for coin in self.coin_pt:
+            speed = random.randint(1, 5)
+            direction = Vec2d(1, 0).rotated(self.car_body.angle + random.randint(-2, 2))
+            coin.velocity = speed * direction
+
         # Move obstacles.
         if self.num_steps % 100 == 0:
             self.move_obstacles()
+            #self.move_coin_pt()
 
         driving_direction = Vec2d(2, 0).rotated(self.car_body.angle)
         self.car_body.velocity = 10 * driving_direction
@@ -133,6 +156,18 @@ class GameState:
         state = np.array([normalized_readings])
 
         # Set the reward.
+        
+        #Give reward and remove coin
+        def remove_coin(space, arbiter):
+            first_shape = arbiter.shapes[0] 
+            space.add_post_step_callback(space.remove, first_shape, first_shape.body)
+            self.coin_pt.append(self.create_coin_pt(random.randint(1,900),random.randint(1,600),60))
+            reward = 100
+            self.num_steps += 1
+            print(state)
+            return reward, state
+        self.space.add_collision_handler(1, 2, separate = remove_coin)#Uses collision type to handle collision
+        
         # Car crashed when any reading == 1
         if self.car_is_crashed(readings):
             self.crashed = True
@@ -155,8 +190,18 @@ class GameState:
             direction = Vec2d(1, 0).rotated(self.car_body.angle + random.randint(-2, 2))
             obstacle.velocity = speed * direction
 
+    def move_coin_pt(self):
+        # Randomly move coins around.
+        for coin in self.coin_pt:
+            speed = random.randint(1, 5)
+            direction = Vec2d(1, 0).rotated(self.car_body.angle + random.randint(-2, 2))
+            coin.velocity = speed * direction
+
+            
     def car_is_crashed(self, readings):
-        if readings[0] == 1 or readings[2] == 1 or readings[4] == 1 or readings[6] == 1 or readings[8] == 1:
+        #Thinking of using collision handler instead of this function
+        if readings[0] == 1 or readings[2] == 1 or readings[4] == 1 or readings[6] == 1 or readings[8] == 1 and  (readings[1] == 1 or readings[3] == 1 or readings[5] == 1 or readings[7] == 1 or readings[9] == 1):
+           #Checks for color
             return True
         else:
             return False
@@ -234,7 +279,7 @@ class GameState:
             else:
                 obs = screen.get_at(rotated_p)
                 if self.get_track_or_not(obs) != 0:
-                    return [i,1] #1 for obstacle color
+                    return [i,self.get_track_or_not(obs)] #1 for obstacle color
 
             if show_sensors:
                 pygame.draw.circle(screen, color, (rotated_p), 2)
@@ -266,6 +311,8 @@ class GameState:
     def get_track_or_not(self, reading):
         if reading == THECOLORS['white']:
             return 0
+        elif reading == THECOLORS['orange']:
+            return 0.5
         else:
             return 1
 
