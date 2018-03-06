@@ -69,28 +69,6 @@ class GameState:
         self.obstacles.append(self.create_obstacle(700, 200, 125))
         self.obstacles.append(self.create_obstacle(600, 600, 35))
 
-        # Create a cat.
-        #self.create_cat()
-
-    def create_obstacle(self, x, y, r):
-        c_body = pymunk.Body(pymunk.inf, pymunk.inf)
-        c_shape = pymunk.Circle(c_body, r)
-        c_shape.elasticity = 1.0
-        c_body.position = x, y
-        c_shape.color = THECOLORS["blue"]
-        self.space.add(c_body, c_shape)
-        return c_body
-
-    """def create_cat(self):
-        inertia = pymunk.moment_for_circle(1, 0, 14, (0, 0))
-        self.cat_body = pymunk.Body(1, inertia)
-        self.cat_body.position = 50, height - 100
-        self.cat_shape = pymunk.Circle(self.cat_body, 30)
-        self.cat_shape.color = THECOLORS["orange"]
-        self.cat_shape.elasticity = 1.0
-        self.cat_shape.angle = 0.5
-        direction = Vec2d(1, 0).rotated(self.cat_body.angle)
-        self.space.add(self.cat_body, self.cat_shape)"""
 
     def create_car(self, x, y, r):
         inertia = pymunk.moment_for_circle(1, 0, 14, (0, 0))
@@ -103,6 +81,17 @@ class GameState:
         driving_direction = Vec2d(1, 0).rotated(self.car_body.angle)
         self.car_body.apply_impulse(driving_direction)
         self.space.add(self.car_body, self.car_shape)
+
+        
+    def create_obstacle(self, x, y, r):
+        c_body = pymunk.Body(pymunk.inf, pymunk.inf)
+        c_shape = pymunk.Circle(c_body, r)
+        c_shape.elasticity = 1.0
+        c_body.position = x, y
+        c_shape.color = THECOLORS["blue"]
+        self.space.add(c_body, c_shape)
+        return c_body
+
 
     def frame_step(self, action):
         if action == 0:  # Turn left.
@@ -125,10 +114,6 @@ class GameState:
         if self.num_steps % 100 == 0:
             self.move_obstacles()
 
-        # Move cat.
-        """if self.num_steps % 5 == 0:
-            self.move_cat()"""
-
         driving_direction = Vec2d(2, 0).rotated(self.car_body.angle)
         self.car_body.velocity = 10 * driving_direction
 
@@ -143,6 +128,7 @@ class GameState:
         # Get the current location and the readings there.
         x, y = self.car_body.position
         readings = self.get_sonar_readings(x, y, self.car_body.angle)
+        #Even terms in readings are distance and odd terms are color
         normalized_readings = [((i+1)%2)*(x-20.0)/20.0+(i%2)*x for i,x in enumerate(readings)] 
         state = np.array([normalized_readings])
 
@@ -168,12 +154,6 @@ class GameState:
             speed = random.randint(1, 5)
             direction = Vec2d(1, 0).rotated(self.car_body.angle + random.randint(-2, 2))
             obstacle.velocity = speed * direction
-
-    """def move_cat(self):
-        speed = random.randint(20, 200)
-        self.cat_body.angle -= random.randint(-1, 1)
-        direction = Vec2d(1, 0).rotated(self.cat_body.angle)
-        self.cat_body.velocity = speed * direction"""
 
     def car_is_crashed(self, readings):
         if readings[0] == 1 or readings[2] == 1 or readings[4] == 1 or readings[6] == 1 or readings[8] == 1:
@@ -233,7 +213,7 @@ class GameState:
 
         return readings
 
-    def get_arm_distance(self, arm, x, y, angle, offset, color):
+    def get_arm_distance(self, arm, x, y, angle, offset, color): #Returns distance, color 
         # Used to count the distance.
         i = 0
 
@@ -292,4 +272,4 @@ class GameState:
 if __name__ == "__main__":
     game_state = GameState()
     while True:
-        game_state.frame_step((random.randint(0, 4)))
+        game_state.frame_step((random.randint(0, 5)))

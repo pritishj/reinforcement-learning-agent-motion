@@ -1,8 +1,3 @@
-"""
-The design of this comes from here:
-http://outlace.com/Reinforcement-Learning-Part-3/
-"""
-
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation, Dropout
 from keras.optimizers import RMSprop
