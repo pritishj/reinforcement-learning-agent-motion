@@ -7,7 +7,7 @@ import os.path
 import timeit
 
 NUM_INPUT = 10
-GAMMA = 0.9  # Forgetting.
+GAMMA = 0.8  # Forgetting.
 TUNING = False  # If False, just use arbitrary, pre-selected params.
 
 
@@ -52,7 +52,6 @@ def train_net(model, params):
             # Get Q values for each action.
             qval = model.predict(state, batch_size=1)
             action = (np.argmax(qval))  # best
-
         # Take action, observe new state and get our treat.
         reward, new_state = game_state.frame_step(action)
 
@@ -158,15 +157,21 @@ def process_minibatch2(minibatch, model):
 
     maxQs = np.max(new_qvals, axis=1)
     y = old_qvals
-    
-    non_term_inds = np.where(np.logical_and(rewards != -500, rewards!=100))[0]
+   
+    non_term_inds = np.where((rewards != -500)!=500)[0]
     term_inds1 = np.where(rewards == -500)[0]
-    term_inds2 = np.where(rewards == 100)[0]
+    term_inds2 = np.where(rewards == 500)[0]
     
     y[non_term_inds, actions[non_term_inds].astype(int)] = rewards[non_term_inds] + (GAMMA * maxQs[non_term_inds])
     y[term_inds1, actions[term_inds1].astype(int)] = rewards[term_inds1]
     y[term_inds2, actions[term_inds2].astype(int)] = rewards[term_inds2]
-    
+    '''
+    non_term_inds = np.where(rewards != -500)[0]
+    term_inds = np.where(rewards == -500)[0]
+      
+    y[non_term_inds, actions[non_term_inds].astype(int)] = rewards[non_term_inds] + (GAMMA * maxQs[non_term_inds])
+    y[term_inds, actions[term_inds].astype(int)] = rewards[term_inds]
+    '''
     X_train = old_states
     y_train = y
     return X_train, y_train
@@ -189,7 +194,7 @@ def process_minibatch(minibatch, model):
         y = np.zeros((1, 10))
         y[:] = old_qval[:]
         # Check for terminal state.
-        if reward_m != -500 and reward_m!=100:  # non-terminal state
+        if reward_m != -500 and reward_m != 500:  # non-terminal state
             update = (reward_m + (GAMMA * maxQ))
         else:  # terminal state
             update = reward_m

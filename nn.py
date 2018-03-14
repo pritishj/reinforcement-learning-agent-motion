@@ -30,7 +30,7 @@ def neural_net(num_sensors, params, load=''):
 
     # Output layer.
     model.add(Dense(5, kernel_initializer='lecun_uniform'))
-    model.add(Activation('linear'))
+    model.add(Activation('selu'))
 
     rms = RMSprop()
     model.compile(loss='mse', optimizer=rms)

@@ -10,7 +10,8 @@ from pymunk.vec2d import Vec2d
 from pymunk.pygame_util import draw
 
 # PyGame init
-ncollision=0
+ncollision = 0
+coins = 0
 width = 1000
 height = 700
 pygame.init()
@@ -29,7 +30,8 @@ class GameState:
     def __init__(self):
         # Global-ish.
         self.crashed = False
-
+        self.is_coin = False
+        
         # Physics stuff.
         self.space = pymunk.Space()
         self.space.gravity = pymunk.Vec2d(0., 0.)
@@ -59,6 +61,7 @@ class GameState:
             s.friction = 1.
             s.group = 1
             s.color = THECOLORS['red']
+            s.collision_type = 1
         self.space.add(static)
 
         # Create some obstacles, semi-randomly.
@@ -94,17 +97,18 @@ class GameState:
         c_shape = pymunk.Circle(c_body, r)
         c_shape.elasticity = 1.0
         c_body.position = x, y
+        c_shape.collision_type = 3
         #c_shape.group = 2
         c_shape.color = THECOLORS["blue"]
         self.space.add(c_body, c_shape)
         return c_body
 
     def create_coin_pt(self, x, y, r):
-        r_body = pymunk.Body(1000, pymunk.inf)
+        r_body = pymunk.Body(pymunk.inf, pymunk.inf)
         r_shape = pymunk.Circle(r_body, r)
         r_shape.elasticity = 1.0
         r_body.position = x, y
-        r_shape.collision_type = 1
+        r_shape.collision_type = 4
         #r_shape.group = 2
         r_shape.color = THECOLORS["orange"]
         self.space.add(r_body, r_shape)
@@ -127,15 +131,11 @@ class GameState:
             self.car_body.angle += .2
             self.car_shape.color = THECOLORS["orange"]
 
-        for coin in self.coin_pt:
-            speed = random.randint(1, 5)
-            direction = Vec2d(1, 0).rotated(self.car_body.angle + random.randint(-2, 2))
-            coin.velocity = speed * direction
-
+        
         # Move obstacles.
         if self.num_steps % 100 == 0:
             self.move_obstacles()
-            #self.move_coin_pt()
+            self.move_coin_pt()
 
         driving_direction = Vec2d(2, 0).rotated(self.car_body.angle)
         self.car_body.velocity = 10 * driving_direction
@@ -162,19 +162,29 @@ class GameState:
             first_shape = arbiter.shapes[0] 
             space.add_post_step_callback(space.remove, first_shape, first_shape.body)
             self.coin_pt.append(self.create_coin_pt(random.randint(1,900),random.randint(1,600),60))
-            reward = 100
-            self.num_steps += 1
-            print(state)
-            return reward, state
-        self.space.add_collision_handler(1, 2, separate = remove_coin)#Uses collision type to handle collision
-        
-        # Car crashed when any reading == 1
-        if self.car_is_crashed(readings):
+            self.is_coin = True
+            return True
+        self.space.add_collision_handler(4, 2, begin = remove_coin)#Uses collision type to handle collision
+
+        def detect_obs(space, arbiter):
             self.crashed = True
+            return True
+        self.space.add_collision_handler(1, 2, begin = detect_obs, post_solve = detect_obs)#Uses collision type to handle collision
+        self.space.add_collision_handler(3, 2, begin = detect_obs, post_solve = detect_obs)
+
+        global ncollision
+        global coins
+        # Car crashed when any reading == 1
+        if self.is_coin:
+            reward = 500
+            coins = coins + 1
+            print("Total collisions: %d Total coins: %d" % (ncollision,coins))
+            print(state)
+            self.is_coin = False
+        elif self.crashed:
             reward = -500
-            global ncollision
             ncollision = ncollision + 1
-            print("Total collisions: %d" % ncollision)
+            print("Total collisions: %d Total coins: %d" % (ncollision,coins))
             self.recover_from_crash(driving_direction)
         else:
             # Higher readings are better, so return the sum.
@@ -210,18 +220,18 @@ class GameState:
         """
         We hit something, so recover.
         """
-        while self.crashed:
-            # Go backwards.
-            self.car_body.velocity = -100 * driving_direction
-            self.crashed = False
-            for i in range(10):
-                self.car_body.angle += .1  # Turn a little.
-                screen.fill(THECOLORS["grey7"])  # Red is scary!
-                draw(screen, self.space)
-                self.space.step(1./10)
-#                if draw_screen:
-#                    pygame.display.flip()
-                clock.tick()
+        #while self.crashed:
+        # Go backwards.
+        self.car_body.velocity = -100 * driving_direction
+        self.crashed = False
+        for i in range(10):
+            self.car_body.angle += .1  # Turn a little.
+            screen.fill(THECOLORS["grey7"])  # Red is scary!
+            draw(screen, self.space)
+            self.space.step(1./10)
+            #                if draw_screen:
+            #                    pygame.display.flip()
+            clock.tick()
 
     def sum_readings(self, readings):
         """Sum the number of non-zero readings."""
@@ -312,7 +322,7 @@ class GameState:
         if reading == THECOLORS['white']:
             return 0
         elif reading == THECOLORS['orange']:
-            return 0.5
+            return -1
         else:
             return 1
 
